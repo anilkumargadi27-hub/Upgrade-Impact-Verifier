@@ -1,11 +1,11 @@
 services:
-  # Standalone Unified Web Service (Express REST API + React SPA + Embedded PGlite Database)
+  # Standalone Unified Web Service (Express REST API + React SPA + Embedded Database)
   - type: web
     name: upgradelens-web
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm ci --include=dev && npm --workspace=@upgradelens/api run db:generate && npm run build
+    buildCommand: npm ci --include=dev && npm --workspace=@upgradelens/api run db:push && npm run build
     startCommand: node --max-old-space-size=128 apps/api/dist/index.js
     healthCheckPath: /api/healthz
     envVars:
@@ -14,7 +14,7 @@ services:
       - key: PORT
         value: 10000
       - key: DATABASE_URL
-        value: "postgresql://pglite:pglite@localhost:5432/upgradelens?schema=public"
+        value: "file:/tmp/upgradelens.db"
       - key: SESSION_SECRET
         generateValue: true
       - key: RUNNER_TYPE

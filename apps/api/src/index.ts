@@ -125,8 +125,8 @@ async function startServer() {
     const queueService = getQueueService();
     if (!process.env.REDIS_URL || !process.env.REDIS_URL.startsWith('redis://')) {
       const importDynamic = (spec: string) => (Function('spec', 'return import(spec)') as any)(spec);
-      const { runAnalysisPipeline } = await importDynamic('../../worker/dist/orchestrator.js');
       (queueService as any).registerProcessor(async (data: any, signal: AbortSignal) => {
+        const { runAnalysisPipeline } = await importDynamic('../../worker/dist/orchestrator.js');
         const prisma = await getPrismaClient();
         await runAnalysisPipeline(prisma, queueService, data, signal);
       });
