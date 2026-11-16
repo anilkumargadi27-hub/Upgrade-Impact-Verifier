@@ -1,0 +1,9 @@
+{
+  "id": "scenario-2",
+  "name": "Changed required argument detected by type checking",
+  "description": "Application calls calculateTax(amount). In v2.0.0, rate and countryCode became required. The typecheck and test checks pass on baseline and fail on upgrade.",
+  "dependencyName": "mock-math-lib",
+  "baselineVersion": "1.0.0",
+  "targetVersion": "2.0.0",
+  "expectedOutcome": "REGRESSION_OBSERVED"
+}

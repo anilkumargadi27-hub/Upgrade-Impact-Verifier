@@ -1,0 +1,9 @@
+{
+  "id": "scenario-1",
+  "name": "Removed export used by application",
+  "description": "Application imports formatDate from mock-date-utils. In v2.0.0, formatDate was removed. The test suite passes on baseline and fails on upgrade.",
+  "dependencyName": "mock-date-utils",
+  "baselineVersion": "1.0.0",
+  "targetVersion": "2.0.0",
+  "expectedOutcome": "REGRESSION_OBSERVED"
+}

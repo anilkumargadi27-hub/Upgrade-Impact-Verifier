@@ -1,0 +1,9 @@
+{
+  "id": "scenario-5",
+  "name": "Missing tests",
+  "description": "The application has no test scripts configured. Missing tests are not passing tests; a limitation is explicitly attached to the report.",
+  "dependencyName": "mock-logger",
+  "baselineVersion": "1.0.0",
+  "targetVersion": "1.1.0",
+  "expectedOutcome": "NO_REGRESSION_OBSERVED"
+}

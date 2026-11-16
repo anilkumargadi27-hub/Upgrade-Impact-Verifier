@@ -1,0 +1,9 @@
+{
+  "id": "scenario-8",
+  "name": "Removed export that the application never uses",
+  "description": "mock-date-utils removes formatDate in v2.0.0. However, the application only uses parseDate. Usage-aware analysis detects that the removed export is unused in the application, and all checks pass.",
+  "dependencyName": "mock-date-utils",
+  "baselineVersion": "1.0.0",
+  "targetVersion": "2.0.0",
+  "expectedOutcome": "NO_REGRESSION_OBSERVED"
+}

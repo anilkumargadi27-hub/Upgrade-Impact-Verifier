@@ -1,0 +1,26 @@
+{
+  "name": "@upgradelens/worker",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.16",
+    "@prisma/client": "^6.4.1",
+    "@upgradelens/analyzer": "*",
+    "@upgradelens/contracts": "*",
+    "@upgradelens/runner": "*",
+    "bullmq": "^5.41.0",
+    "dotenv": "^16.4.7",
+    "ioredis": "^5.4.2",
+    "pglite-prisma-adapter": "^0.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "prisma": "^6.4.1",
+    "typescript": "^5.7.2"
+  }
+}

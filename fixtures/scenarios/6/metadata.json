@@ -1,0 +1,9 @@
+{
+  "id": "scenario-6",
+  "name": "Execution timeout",
+  "description": "A check hangs or runs indefinitely. The execution bounds trigger a timeout and mark the analysis INCONCLUSIVE.",
+  "dependencyName": "mock-logger",
+  "baselineVersion": "1.0.0",
+  "targetVersion": "1.1.0",
+  "expectedOutcome": "INCONCLUSIVE"
+}

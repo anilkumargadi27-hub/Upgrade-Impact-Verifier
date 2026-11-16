@@ -1,0 +1,9 @@
+{
+  "id": "scenario-3",
+  "name": "Compatible update",
+  "description": "Application uses log() from mock-logger. The update to v1.1.0 is backward-compatible. Tests pass on both baseline and upgrade.",
+  "dependencyName": "mock-logger",
+  "baselineVersion": "1.0.0",
+  "targetVersion": "1.1.0",
+  "expectedOutcome": "NO_REGRESSION_OBSERVED"
+}

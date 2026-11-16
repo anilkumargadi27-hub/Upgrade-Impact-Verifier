@@ -1,0 +1,9 @@
+{
+  "id": "scenario-7",
+  "name": "User cancellation",
+  "description": "User requests analysis cancellation while job is active. Active execution is killed, resources cleaned up, and status is CANCELLED.",
+  "dependencyName": "mock-logger",
+  "baselineVersion": "1.0.0",
+  "targetVersion": "1.1.0",
+  "expectedOutcome": "CANCELLED"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "app-scenario-7",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node -e \"console.log('Running test...'); setInterval(() => {}, 5000);\""
+  },
+  "dependencies": {
+    "mock-logger": "1.0.0"
+  }
+}

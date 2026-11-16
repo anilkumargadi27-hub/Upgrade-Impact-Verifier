@@ -1,0 +1,190 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  sessions     Session[]
+  projects     Project[]
+  analyses     Analysis[]
+
+  @@index([email])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model Project {
+  id            String     @id @default(uuid())
+  name          String
+  repoUrl       String
+  defaultBranch String     @default("main")
+  userId        String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  analyses      Analysis[]
+
+  @@index([userId])
+  @@index([repoUrl])
+}
+
+model Analysis {
+  id                   String            @id @default(uuid())
+  projectId            String
+  project              Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId               String
+  user                 User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prUrl                String?
+  repoUrl              String
+  dependencyName       String
+  baselineVersion      String
+  targetVersion        String
+  baselineCommitSha    String
+  targetCommitSha      String?
+  lockfileHashBaseline String?
+  lockfileHashUpgrade  String?
+  stage                String            @default("queued") // AnalysisStage
+  overallOutcome       String?           // AnalysisOutcome
+  outcomeReason        String?
+  runnerType           String            @default("process")
+  aiEnriched           Boolean           @default(false)
+  aiModel              String?
+  reportSnapshot       String?           // Full immutable JSON snapshot
+  errorDetails         String?
+  rerunOfId            String?
+  startedAt            DateTime          @default(now())
+  completedAt          DateTime?
+  durationMs           Int?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  attempts             AnalysisAttempt[]
+  events               AnalysisEvent[]
+  findings             Finding[]
+  evidenceList         Evidence[]
+  executions           Execution[]
+  artifacts            Artifact[]
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([stage])
+  @@index([dependencyName])
+}
+
+model AnalysisAttempt {
+  id            String    @id @default(uuid())
+  analysisId    String
+  analysis      Analysis  @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  attemptNumber Int
+  status        String
+  error         String?
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+
+  @@index([analysisId])
+}
+
+model AnalysisEvent {
+  id         String   @id @default(uuid())
+  analysisId String
+  analysis   Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  stage      String
+  message    String
+  dataJson   String?  // JSON string
+  timestamp  DateTime @default(now())
+
+  @@index([analysisId, timestamp])
+}
+
+model Finding {
+  id                 String   @id
+  analysisId         String
+  analysis           Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  title              String
+  symbol             String
+  changeCategory     String
+  severity           String
+  evidenceStrength   String
+  dependencyName     String
+  baselineVersion    String
+  targetVersion      String
+  affectedFile       String
+  startLine          Int
+  endLine            Int
+  codeSnippet        String
+  explanation        String
+  suggestedMigration String?
+  verificationStatus String   @default("UNEXECUTED")
+  limitationsJson    String   @default("[]")
+  linkedEvidenceJson String   @default("[]")
+  createdAt          DateTime @default(now())
+
+  @@index([analysisId])
+  @@index([symbol])
+}
+
+model Evidence {
+  id           String   @id
+  analysisId   String
+  analysis     Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  type         String
+  source       String
+  title        String
+  content      String
+  metadataJson String?
+  createdAt    DateTime @default(now())
+
+  @@index([analysisId])
+}
+
+model Execution {
+  id             String   @id
+  analysisId     String
+  analysis       Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  phase          String   // BASELINE | UPGRADE
+  checkType      String   // TEST | TYPECHECK | BUILD
+  command        String
+  status         String   // PASS | FAIL | TIMEOUT | ERROR
+  exitCode       Int?
+  durationMs     Int
+  stdoutExcerpt  String
+  stderrExcerpt  String
+  errorDetails   String?
+  createdAt      DateTime @default(now())
+
+  @@index([analysisId])
+}
+
+model Artifact {
+  id         String   @id @default(uuid())
+  analysisId String
+  analysis   Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  name       String
+  path       String
+  mimeType   String
+  sizeBytes  Int
+  createdAt  DateTime @default(now())
+
+  @@index([analysisId])
+}

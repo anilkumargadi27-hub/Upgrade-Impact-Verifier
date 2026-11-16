@@ -1,0 +1,10 @@
+{
+  "name": "app-scenario-5",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "node -e \"console.log('Build succeeded')\""
+  },
+  "dependencies": {
+    "mock-logger": "1.0.0"
+  }
+}

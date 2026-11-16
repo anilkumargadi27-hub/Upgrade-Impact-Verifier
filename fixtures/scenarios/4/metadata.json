@@ -1,0 +1,9 @@
+{
+  "id": "scenario-4",
+  "name": "Baseline already failing",
+  "description": "The application has broken tests on the baseline commit prior to upgrade. Because baseline checks fail, the outcome is INCONCLUSIVE.",
+  "dependencyName": "mock-logger",
+  "baselineVersion": "1.0.0",
+  "targetVersion": "1.1.0",
+  "expectedOutcome": "INCONCLUSIVE"
+}

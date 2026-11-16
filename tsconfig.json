@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@upgradelens/contracts": ["packages/contracts/src/index.ts"],
+      "@upgradelens/analyzer": ["packages/analyzer/src/index.ts"],
+      "@upgradelens/runner": ["packages/runner/src/index.ts"]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "fixtures"
+  ]
+}

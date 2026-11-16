@@ -1,0 +1,69 @@
+services:
+  # 1. Unified Web Service (API + React SPA)
+  - type: web
+    name: upgradelens-web
+    env: node
+    plan: starter
+    region: oregon
+    buildCommand: npm ci && npm --workspace=@upgradelens/api run db:generate && npm run build
+    startCommand: npm --workspace=@upgradelens/api start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: upgradelens-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: upgradelens-redis
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: RUNNER_TYPE
+        value: process
+      - key: AI_ENABLED
+        value: "false"
+
+  # 2. Asynchronous Analysis Worker
+  - type: worker
+    name: upgradelens-worker
+    env: node
+    plan: starter
+    region: oregon
+    buildCommand: npm ci && npm --workspace=@upgradelens/api run db:generate && npm run build
+    startCommand: npm --workspace=@upgradelens/worker start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: upgradelens-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: upgradelens-redis
+          property: connectionString
+      - key: RUNNER_TYPE
+        value: process
+      - key: AI_ENABLED
+        value: "false"
+
+# Managed PostgreSQL Database
+databases:
+  - name: upgradelens-db
+    databaseName: upgradelens
+    user: upgradelens
+    plan: free
+    region: oregon
+
+# Managed Redis Key Value
+redis:
+  - name: upgradelens-redis
+    plan: free
+    region: oregon
+    maxmemoryPolicy: noeviction

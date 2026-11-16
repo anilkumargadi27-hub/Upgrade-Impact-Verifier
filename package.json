@@ -1,0 +1,30 @@
+{
+  "name": "upgradelens-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "UpgradeLens - Upgrade Impact Verifier for Dependency Pull Requests",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev:api": "npm --workspace=@upgradelens/api run dev",
+    "dev:worker": "npm --workspace=@upgradelens/worker run dev",
+    "dev:web": "npm --workspace=@upgradelens/web run dev",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"API,WORKER,WEB\" -c \"blue,green,magenta\" \"npm run dev:api\" \"npm run dev:worker\" \"npm run dev:web\"",
+    "start": "npm --workspace=@upgradelens/api start",
+    "db:migrate": "npm --workspace=@upgradelens/api run db:migrate",
+    "db:generate": "npm --workspace=@upgradelens/api run db:generate",
+    "evaluate:fixtures": "tsx scripts/evaluate-fixtures.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "concurrently": "^9.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

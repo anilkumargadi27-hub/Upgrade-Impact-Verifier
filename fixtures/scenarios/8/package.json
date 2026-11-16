@@ -1,0 +1,10 @@
+{
+  "name": "app-scenario-8",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "mock-date-utils": "1.0.0"
+  }
+}
