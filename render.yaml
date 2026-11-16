@@ -1,11 +1,11 @@
 services:
-  # 1. Unified Web Service (API + React SPA)
+  # Unified Web Service (Express REST API + React SPA + In-Process Analysis Engine)
   - type: web
     name: upgradelens-web
-    env: node
-    plan: starter
+    runtime: node
+    plan: free
     region: oregon
-    buildCommand: npm ci && npm --workspace=@upgradelens/api run db:generate && npm run build
+    buildCommand: npm ci && npm --workspace=@upgradelens/api run db:generate && npx prisma db push --schema=apps/api/prisma/schema.prisma --accept-data-loss && npm run build
     startCommand: npm --workspace=@upgradelens/api start
     envVars:
       - key: NODE_ENV
@@ -16,11 +16,6 @@ services:
         fromDatabase:
           name: upgradelens-db
           property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: upgradelens-redis
-          property: connectionString
       - key: SESSION_SECRET
         generateValue: true
       - key: RUNNER_TYPE
@@ -28,42 +23,10 @@ services:
       - key: AI_ENABLED
         value: "false"
 
-  # 2. Asynchronous Analysis Worker
-  - type: worker
-    name: upgradelens-worker
-    env: node
-    plan: starter
-    region: oregon
-    buildCommand: npm ci && npm --workspace=@upgradelens/api run db:generate && npm run build
-    startCommand: npm --workspace=@upgradelens/worker start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        fromDatabase:
-          name: upgradelens-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: upgradelens-redis
-          property: connectionString
-      - key: RUNNER_TYPE
-        value: process
-      - key: AI_ENABLED
-        value: "false"
-
-# Managed PostgreSQL Database
+# Managed PostgreSQL Database (Free Tier)
 databases:
   - name: upgradelens-db
     databaseName: upgradelens
     user: upgradelens
     plan: free
     region: oregon
-
-# Managed Redis Key Value
-redis:
-  - name: upgradelens-redis
-    plan: free
-    region: oregon
-    maxmemoryPolicy: noeviction

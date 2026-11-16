@@ -3,45 +3,40 @@
 **Product Name:** UpgradeLens  
 **Project Owner:** G. Anil Kumar  
 
-UpgradeLens supports continuous deployment on **Render**, **Docker Compose**, and **Kubernetes/Cloud VMs**.
+UpgradeLens supports continuous deployment on **Render**, **Docker Compose**, and **Cloud VMs**.
 
 ---
 
-## 1. Deploying on Render (Recommended)
+## 1. Deploying on Render (Free Tier Blueprint)
 
-UpgradeLens includes a production-ready `render.yaml` blueprint.
+UpgradeLens includes a production-ready, 100% free-tier compliant `render.yaml` blueprint.
 
-### Automatic Blueprint Deployment
+### Architecture on Render
+- **`upgradelens-web` (Web Service - Free Plan):**
+  - Serves the compiled production React SPA frontend.
+  - Handles the REST API endpoints and SSE live events.
+  - Automatically activates the in-process queue processor (`InProcessQueueService`), running analysis jobs directly on Render without needing a paid background worker instance.
+- **`upgradelens-db` (PostgreSQL Database - Free Plan):**
+  - Managed PostgreSQL database created by Render.
+  - Schema is automatically migrated on build via `prisma db push`.
+
+### Step-by-Step Blueprint Deployment
 1. Log in to [Render Dashboard](https://dashboard.render.com).
-2. Click **Blueprints** -> **New Blueprint Instance**.
+2. Click **New +** -> **Blueprint**.
 3. Connect your GitHub repository:
    `https://github.com/anilkumargadi27-hub/Upgrade-Impact-Verifier`
-4. Render automatically configures:
-   - **`upgradelens-web`**: Web Service running the API + React SPA.
-   - **`upgradelens-worker`**: Background worker processing the BullMQ queue.
-   - **`upgradelens-db`**: Managed PostgreSQL database.
-   - **`upgradelens-redis`**: Managed Redis Key-Value store.
+4. Render automatically parses `render.yaml` and displays:
+   - Web Service: `upgradelens-web` (Free tier)
+   - Database: `upgradelens-db` (Free tier)
 5. Click **Apply**.
-6. Once deployed, Render provides your public URL:
+6. Once deployment finishes, Render provides your public HTTPS URL:
    `https://upgradelens-web.onrender.com`
-
-### Environment Variables on Render
-| Variable | Description |
-| :--- | :--- |
-| `NODE_ENV` | `production` |
-| `PORT` | `10000` (Render default) |
-| `DATABASE_URL` | Auto-populated by Render PostgreSQL |
-| `REDIS_URL` | Auto-populated by Render Redis |
-| `SESSION_SECRET` | Auto-generated cryptographic random key |
-| `RUNNER_TYPE` | `process` |
-| `AI_ENABLED` | Set `true` to enable optional Gemini enrichment |
-| `GEMINI_API_KEY` | Optional Google AI Studio API key |
 
 ---
 
 ## 2. Deploying with Docker Compose
 
-For self-hosted virtual machines (AWS EC2, DigitalOcean, Hetzner, GCP):
+For local testing with native PostgreSQL and Redis:
 
 ```bash
 # 1. Clone repository
@@ -65,6 +60,5 @@ docker compose ps
 ## 3. Production Health & Monitoring
 
 - **Readiness / Liveness Probe:** `GET /api/health`
-  - Returns `200 OK` with database connection state and queue mode.
 - **System Capabilities:** `GET /api/system/settings`
 - **OpenAPI Specification:** `GET /api/docs/openapi.json`
