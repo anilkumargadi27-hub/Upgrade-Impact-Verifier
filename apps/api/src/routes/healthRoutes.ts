@@ -4,37 +4,49 @@ import { getQueueService } from '../queue/index.js';
 
 export const healthRouter = Router();
 
-// Quick Liveness Probe (for Render / uptime pings)
+// Quick Liveness Probe (for Render / platform ping) - shallow check that server event loop is responsive
 healthRouter.get('/healthz', (_req, res) => {
-  return res.status(200).json({ status: 'OK' });
+  return res.status(200).json({
+    status: 'OK',
+    uptime: Math.round(process.uptime()),
+    memory: {
+      rssMb: Math.round(process.memoryUsage().rss / 1024 / 1024),
+      heapUsedMb: Math.round(process.memoryUsage().heapUsed / 1024 / 1024)
+    },
+    timestamp: new Date().toISOString()
+  });
 });
 
 healthRouter.get('/ping', (_req, res) => {
   return res.status(200).send('pong');
 });
 
-// GET /api/health (Liveness / Readiness)
+// GET /api/health (Readiness Probe) - verifies essential database and queue readiness
 healthRouter.get('/health', async (_req, res) => {
-  let dbStatus = 'DISCONNECTED';
+  let dbStatus: 'CONNECTED' | 'DISCONNECTED' = 'DISCONNECTED';
+  let dbError: string | undefined;
+
   try {
     const prisma = await getPrismaClient();
     await prisma.$queryRaw`SELECT 1`;
     dbStatus = 'CONNECTED';
-  } catch {
-    dbStatus = 'INITIALIZING';
+  } catch (err: any) {
+    dbStatus = 'DISCONNECTED';
+    dbError = err.message || 'Database connection error';
   }
 
   const queue = getQueueService();
   const isHealthy = dbStatus === 'CONNECTED';
 
-  // Always return 200 so host load balancers / Render health check do not terminate the service
-  return res.status(200).json({
-    status: isHealthy ? 'HEALTHY' : 'INITIALIZING',
+  return res.status(isHealthy ? 200 : 503).json({
+    status: isHealthy ? 'HEALTHY' : 'UNHEALTHY',
+    uptime: Math.round(process.uptime()),
     timestamp: new Date().toISOString(),
     services: {
       database: dbStatus,
       queue: process.env.REDIS_URL ? 'BULLMQ_REDIS' : 'IN_PROCESS'
-    }
+    },
+    error: dbError
   });
 });
 

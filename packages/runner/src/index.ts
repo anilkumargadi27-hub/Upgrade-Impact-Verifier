@@ -154,7 +154,7 @@ export function runProcess(
 export async function executeWorkspaceChecks(
   workspaceDir: string,
   phase: ExecutionPhase,
-  timeoutMs = 30000
+  timeoutMs = 60000
 ): Promise<WorkspaceRunResult> {
   const checks: CheckExecutionResult[] = [];
   const pkgJsonPath = path.join(workspaceDir, 'package.json');

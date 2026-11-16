@@ -135,6 +135,29 @@ async function startServer() {
   } catch (err: any) {
     console.warn('[Server] Worker orchestrator registration note:', err.message || err);
   }
+
+  // 4. Graceful shutdown handler
+  const shutdown = async (signal: string) => {
+    console.log(`[Server] Received ${signal}. Closing HTTP server and releasing database resources...`);
+    server.close(async () => {
+      try {
+        const { closeDatabase } = await import('./db.js');
+        await closeDatabase();
+        console.log('[Server] Database connections closed cleanly.');
+      } catch (closeErr) {
+        console.error('[Server] Error closing database:', closeErr);
+      }
+      process.exit(0);
+    });
+
+    setTimeout(() => {
+      console.warn('[Server] Forcing shutdown after timeout.');
+      process.exit(0);
+    }, 10000).unref();
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 startServer();
