@@ -14,7 +14,7 @@ services:
       - key: PORT
         value: 10000
       - key: DATABASE_URL
-        value: "file:/tmp/upgradelens.db"
+        value: "file:./dev.db"
       - key: SESSION_SECRET
         generateValue: true
       - key: RUNNER_TYPE
