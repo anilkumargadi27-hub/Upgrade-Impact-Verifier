@@ -1,32 +1,20 @@
 services:
-  # Unified Web Service (Express REST API + React SPA + In-Process Analysis Engine)
+  # Standalone Unified Web Service (Express REST API + React SPA + Embedded PGlite Database)
   - type: web
     name: upgradelens-web
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm ci && npm --workspace=@upgradelens/api run db:generate && npx prisma db push --schema=apps/api/prisma/schema.prisma --accept-data-loss && npm run build
+    buildCommand: npm ci && npm --workspace=@upgradelens/api run db:generate && npm run build
     startCommand: npm --workspace=@upgradelens/api start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
-      - key: DATABASE_URL
-        fromDatabase:
-          name: upgradelens-db
-          property: connectionString
       - key: SESSION_SECRET
         generateValue: true
       - key: RUNNER_TYPE
         value: process
       - key: AI_ENABLED
         value: "false"
-
-# Managed PostgreSQL Database (Free Tier)
-databases:
-  - name: upgradelens-db
-    databaseName: upgradelens
-    user: upgradelens
-    plan: free
-    region: oregon
