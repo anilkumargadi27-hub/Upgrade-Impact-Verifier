@@ -3,6 +3,8 @@
 > **Answers:** *“If I upgrade this dependency, which parts of my application could break, and what evidence supports that conclusion?”*
 
 **Project Owner:** G. Anil Kumar  
+**Live Public Application URL:** [https://upgradelens-web.onrender.com](https://upgradelens-web.onrender.com)  
+**Deployment Health Probe:** [https://upgradelens-web.onrender.com/api/health](https://upgradelens-web.onrender.com/api/health)  
 **Destination Repository:** [https://github.com/anilkumargadi27-hub/Upgrade-Impact-Verifier.git](https://github.com/anilkumargadi27-hub/Upgrade-Impact-Verifier.git)  
 **Branch:** `main`
 
