@@ -5,11 +5,11 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm ci && npm --workspace=@upgradelens/api run db:generate && npm run build
+    buildCommand: npm ci --include=dev && npm --workspace=@upgradelens/api run db:generate && npm run build
     startCommand: npm --workspace=@upgradelens/api start
     envVars:
-      - key: NODE_ENV
-        value: production
+      - key: NODE_VERSION
+        value: 22.12.0
       - key: PORT
         value: 10000
       - key: SESSION_SECRET

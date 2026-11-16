@@ -7,8 +7,13 @@
     "apps/*",
     "packages/*"
   ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build:packages": "npm --workspace=@upgradelens/contracts run build && npm --workspace=@upgradelens/analyzer run build && npm --workspace=@upgradelens/runner run build",
+    "build:apps": "npm --workspace=@upgradelens/api run build && npm --workspace=@upgradelens/worker run build && npm --workspace=@upgradelens/web run build",
+    "build": "npm run build:packages && npm run build:apps",
     "test": "vitest run",
     "test:watch": "vitest",
     "dev:api": "npm --workspace=@upgradelens/api run dev",
