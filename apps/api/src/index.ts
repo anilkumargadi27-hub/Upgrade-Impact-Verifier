@@ -102,10 +102,16 @@ app.use((err: any, req: express.Request, res: express.Response, _next: express.N
 // Server Startup
 async function startServer() {
   try {
-    // Initialize database
+    // 1. Bind port immediately so Render health checks succeed
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`[Server] UpgradeLens API listening on http://0.0.0.0:${port}`);
+      console.log(`[Server] Health check: http://localhost:${port}/api/health`);
+    });
+
+    // 2. Initialize database
     await getPrismaClient();
 
-    // Initialize queue service
+    // 3. Initialize queue service
     const queueService = getQueueService();
     if (!process.env.REDIS_URL || !process.env.REDIS_URL.startsWith('redis://')) {
       try {
@@ -120,11 +126,6 @@ async function startServer() {
         console.warn('[Server] Worker orchestrator will run via standalone worker service:', err.message);
       }
     }
-
-    app.listen(port, '0.0.0.0', () => {
-      console.log(`[Server] UpgradeLens API listening on http://0.0.0.0:${port}`);
-      console.log(`[Server] Health check: http://localhost:${port}/api/health`);
-    });
   } catch (err) {
     console.error('[Server] Fatal startup error:', err);
     process.exit(1);
