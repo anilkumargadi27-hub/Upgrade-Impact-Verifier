@@ -101,34 +101,39 @@ app.use((err: any, req: express.Request, res: express.Response, _next: express.N
 
 // Server Startup
 async function startServer() {
+  // 1. Bind port immediately so Render health checks and probes succeed
+  const server = app.listen(port, '0.0.0.0', () => {
+    console.log(`[Server] UpgradeLens API listening on http://0.0.0.0:${port}`);
+    console.log(`[Server] Health check: http://localhost:${port}/api/health`);
+    console.log(`[Server] Liveness check: http://localhost:${port}/api/healthz`);
+  });
+
+  server.on('error', (err) => {
+    console.error('[Server] Fatal listen error:', err);
+  });
+
+  // 2. Initialize database asynchronously without crashing host
   try {
-    // 1. Bind port immediately so Render health checks succeed
-    app.listen(port, '0.0.0.0', () => {
-      console.log(`[Server] UpgradeLens API listening on http://0.0.0.0:${port}`);
-      console.log(`[Server] Health check: http://localhost:${port}/api/health`);
-    });
-
-    // 2. Initialize database
     await getPrismaClient();
+    console.log('[Server] Database initialized successfully.');
+  } catch (err: any) {
+    console.error('[Server] Database initialization deferred or error:', err.message || err);
+  }
 
-    // 3. Initialize queue service
+  // 3. Initialize queue service
+  try {
     const queueService = getQueueService();
     if (!process.env.REDIS_URL || !process.env.REDIS_URL.startsWith('redis://')) {
-      try {
-        const importDynamic = (spec: string) => (Function('spec', 'return import(spec)') as any)(spec);
-        const { runAnalysisPipeline } = await importDynamic('../../worker/dist/orchestrator.js');
-        (queueService as any).registerProcessor(async (data: any, signal: AbortSignal) => {
-          const prisma = await getPrismaClient();
-          await runAnalysisPipeline(prisma, queueService, data, signal);
-        });
-        console.log('[Server] Registered in-process analysis pipeline processor.');
-      } catch (err: any) {
-        console.warn('[Server] Worker orchestrator will run via standalone worker service:', err.message);
-      }
+      const importDynamic = (spec: string) => (Function('spec', 'return import(spec)') as any)(spec);
+      const { runAnalysisPipeline } = await importDynamic('../../worker/dist/orchestrator.js');
+      (queueService as any).registerProcessor(async (data: any, signal: AbortSignal) => {
+        const prisma = await getPrismaClient();
+        await runAnalysisPipeline(prisma, queueService, data, signal);
+      });
+      console.log('[Server] Registered in-process analysis pipeline processor.');
     }
-  } catch (err) {
-    console.error('[Server] Fatal startup error:', err);
-    process.exit(1);
+  } catch (err: any) {
+    console.warn('[Server] Worker orchestrator registration note:', err.message || err);
   }
 }
 

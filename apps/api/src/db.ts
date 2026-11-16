@@ -13,12 +13,15 @@ export async function getPrismaClient(): Promise<PrismaClient> {
   }
 
   const databaseUrl = process.env.DATABASE_URL;
-  const isPostgresUrl = databaseUrl && databaseUrl.startsWith('postgresql://') && !databaseUrl.includes('stub');
+  // External PostgreSQL: require postgresql:// and not a localhost/stub address
+  const isPostgresUrl = databaseUrl && 
+    databaseUrl.startsWith('postgresql://') && 
+    !databaseUrl.includes('stub') &&
+    (!databaseUrl.includes('localhost') || process.platform === 'win32');
 
   if (isPostgresUrl) {
     try {
       const client = new PrismaClient();
-      // Test connectivity with a timeout
       await client.$connect();
       prismaInstance = client;
       console.log('[DB] Connected to PostgreSQL via DATABASE_URL');
@@ -28,37 +31,53 @@ export async function getPrismaClient(): Promise<PrismaClient> {
     }
   }
 
-  // Fallback: Embedded PGlite (WebAssembly Postgres)
-  const dataDir = path.resolve(process.cwd(), '.data/pglite');
-  fs.mkdirSync(dataDir, { recursive: true });
-
-  pgliteInstance = new PGlite(dataDir);
-  await pgliteInstance.waitReady;
-
-  // Run initial schema DDL if needed
-  const migrationPath = path.resolve(__dirname, '../prisma/migrations/0_init/migration.sql');
-  const fallbackMigrationPath = path.resolve(process.cwd(), 'apps/api/prisma/migrations/0_init/migration.sql');
-  const actualMigrationPath = fs.existsSync(migrationPath) ? migrationPath : fallbackMigrationPath;
-
-  if (fs.existsSync(actualMigrationPath)) {
-    try {
-      let ddl = fs.readFileSync(actualMigrationPath, 'utf-8');
-      // Strip UTF-8 BOM if present
-      ddl = ddl.replace(/^\uFEFF/, '');
-      await pgliteInstance.exec(ddl);
-      console.log('[DB] Embedded PGlite initialized with schema migrations.');
-    } catch (err: any) {
-      if (!err.message?.includes('already exists')) {
-        console.warn('[DB] PGlite migration notice:', err.message);
-      }
-    }
+  // Ensure DATABASE_URL is set so Prisma runtime never throws an env missing exception
+  if (!process.env.DATABASE_URL) {
+    process.env.DATABASE_URL = 'postgresql://pglite:pglite@localhost:5432/upgradelens?schema=public';
   }
 
-  const adapter = new PrismaPGlite(pgliteInstance);
-  prismaInstance = new PrismaClient({ adapter: adapter as any });
-  await prismaInstance.$connect();
-  console.log('[DB] Connected via Prisma PGlite driver adapter');
-  return prismaInstance;
+  // Fallback: Embedded PGlite (WebAssembly Postgres)
+  const dataDir = process.env.PGLITE_DATA_DIR || (process.platform === 'win32'
+    ? path.resolve(process.cwd(), '.data/pglite')
+    : '/tmp/upgradelens-pglite');
+  
+  try {
+    fs.mkdirSync(dataDir, { recursive: true });
+  } catch (dirErr: any) {
+    console.warn('[DB] Notice creating dataDir:', dirErr.message);
+  }
+
+  try {
+    pgliteInstance = new PGlite(dataDir);
+    await pgliteInstance.waitReady;
+
+    // Run initial schema DDL if needed
+    const migrationPath = path.resolve(__dirname, '../prisma/migrations/0_init/migration.sql');
+    const fallbackMigrationPath = path.resolve(process.cwd(), 'apps/api/prisma/migrations/0_init/migration.sql');
+    const actualMigrationPath = fs.existsSync(migrationPath) ? migrationPath : fallbackMigrationPath;
+
+    if (fs.existsSync(actualMigrationPath)) {
+      try {
+        let ddl = fs.readFileSync(actualMigrationPath, 'utf-8');
+        ddl = ddl.replace(/^\uFEFF/, '');
+        await pgliteInstance.exec(ddl);
+        console.log('[DB] Embedded PGlite initialized with schema migrations.');
+      } catch (err: any) {
+        if (!err.message?.includes('already exists')) {
+          console.warn('[DB] PGlite migration notice:', err.message);
+        }
+      }
+    }
+
+    const adapter = new PrismaPGlite(pgliteInstance);
+    prismaInstance = new PrismaClient({ adapter: adapter as any });
+    await prismaInstance.$connect();
+    console.log('[DB] Connected via Prisma PGlite driver adapter');
+    return prismaInstance;
+  } catch (pgliteErr: any) {
+    console.error('[DB] PGlite initialization error:', pgliteErr.message);
+    throw pgliteErr;
+  }
 }
 
 export const prisma = new Proxy({} as PrismaClient, {
