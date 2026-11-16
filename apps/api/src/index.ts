@@ -109,14 +109,15 @@ async function startServer() {
     const queueService = getQueueService();
     if (!process.env.REDIS_URL || !process.env.REDIS_URL.startsWith('redis://')) {
       try {
-        const { runAnalysisPipeline } = await import('../../worker/dist/orchestrator.js');
+        const importDynamic = (spec: string) => (Function('spec', 'return import(spec)') as any)(spec);
+        const { runAnalysisPipeline } = await importDynamic('../../worker/dist/orchestrator.js');
         (queueService as any).registerProcessor(async (data: any, signal: AbortSignal) => {
           const prisma = await getPrismaClient();
           await runAnalysisPipeline(prisma, queueService, data, signal);
         });
         console.log('[Server] Registered in-process analysis pipeline processor.');
       } catch (err: any) {
-        console.warn('[Server] Worker orchestrator will run via standalone worker service.');
+        console.warn('[Server] Worker orchestrator will run via standalone worker service:', err.message);
       }
     }
 
